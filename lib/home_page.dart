@@ -3,27 +3,27 @@ import 'dart:io';
 import 'package:cameraandfilesensor/native_camera_page.dart';
 import 'package:cameraandfilesensor/storage_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class FullPage extends StatefulWidget {
+  const FullPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<FullPage> createState() => _FullPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _FullPageState extends State<FullPage> {
   File? _imageFile;
 
-  Future<void> _requestPermission() async {
+  Future<void> _requestPermissions() async {
     await Permission.camera.request();
     await Permission.storage.request();
     await Permission.manageExternalStorage.request();
   }
 
   Future<void> _takePicture() async {
-    await _requestPermission();
+    await _requestPermissions();
     final File? result = await Navigator.push<File?>(
       context,
       MaterialPageRoute(builder: (_) => const CameraPage()),

@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:camera/camera.dart';
+
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 
 class CameraPage extends StatefulWidget {
@@ -65,14 +66,15 @@ class _CameraPageState extends State<CameraPage> {
   }
 
   void _switchCamera() async {
-    final nextIndex = (_selectedCameraIdx + 1) % _cameras.length;
-    await _setupCamera(nextIndex);
+    final newIndex = (_selectedCameraIdx + 1) % _cameras.length;
+    await _setupCamera(newIndex);
   }
 
   void _toggleFlash() async {
-    FlashMode next = _flashMode == FlashMode.off
-        ? FlashMode.auto
-        : _flashMode == FlashMode.auto
+    FlashMode next =
+        FlashMode == FlashMode.off
+            ? FlashMode.auto
+            : _flashMode == FlashMode.auto
             ? FlashMode.always
             : FlashMode.off;
     await _controller!.setFlashMode(next);
@@ -86,10 +88,10 @@ class _CameraPageState extends State<CameraPage> {
     setState(() {});
   }
 
-  void _handleTap(TapDownDetails details, BoxConstraints constraints) {
+  void _handleTap(TapDownDetails details, BoxConstraints constrainss) {
     final offset = Offset(
-      details.localPosition.dx / constraints.maxWidth,
-      details.localPosition.dy / constraints.maxHeight,
+      details.localPosition.dx / constrainss.maxWidth,
+      details.localPosition.dy / constrainss.maxHeight,
     );
     _controller?.setFocusPoint(offset);
     _controller?.setExposurePoint(offset);
@@ -109,13 +111,13 @@ class _CameraPageState extends State<CameraPage> {
   Widget _circleButton(IconData icon, VoidCallback onTap, {double size = 50}) {
     return ClipOval(
       child: Material(
-        color: Colors.white24,
+        color: Colors.black.withAlpha(102),
         child: InkWell(
           onTap: onTap,
           child: SizedBox(
             width: size,
             height: size,
-            child: Icon(icon, color: Colors.white),
+            child: Icon(icon, color: const Color.fromARGB(255, 210, 210, 210)),
           ),
         ),
       ),
@@ -153,9 +155,9 @@ class _CameraPageState extends State<CameraPage> {
                   min: _minZoom,
                   max: _maxZoom,
                   divisions: ((_maxZoom - _minZoom) * 10).toInt(),
-                  label: '${_zoom.toStringAsFixed(1)}x', 
+                  label: '${_zoom.toStringAsFixed(1)}x',
                   onChanged: (value) => _setZoom(value),
-                  ),
+                ),
               ),
               const Icon(Icons.zoom_in, color: Colors.white),
             ],
@@ -164,11 +166,13 @@ class _CameraPageState extends State<CameraPage> {
             margin: const EdgeInsets.only(top: 6),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.black45,
+              color: Colors.black54,
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Text('${_zoom.toStringAsFixed(1)}x',
-                style: const TextStyle(color: Colors.white)),
+            child: Text(
+              '${_zoom.toStringAsFixed(1)}x',
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -177,6 +181,50 @@ class _CameraPageState extends State<CameraPage> {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body:
+          _controller?.value.isInitialized ?? false
+              ? Stack(
+                children: [
+                  Positioned.fill(child: CameraPreview(_controller!)),
+
+                  _buildZoomControls(),
+
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTapDown: (details) {
+                        final box = context.findRenderObject() as RenderBox;
+                        final offset = box.globalToLocal(
+                          details.globalPosition,
+                        );
+                        final size = box.size;
+                        final relativeOffset = Offset(
+                          offset.dx / size.width,
+                          offset.dy / size.height,
+                        );
+                        _controller?.setFocusPoint(relativeOffset);
+                        _controller?.setExposurePoint(relativeOffset);
+                      },
+                    ),
+                  ),
+
+                  Positioned(
+                    bottom: 20,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _circleButton(_flashIcon(), _toggleFlash),
+                        _circleButton(Icons.camera, _captureImage, size: 70),
+                        _circleButton(Icons.flip_camera_android, _switchCamera),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+              : const Center(child: CircularProgressIndicator()),
+    );
   }
 }
